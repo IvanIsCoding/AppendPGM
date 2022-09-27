@@ -35,23 +35,29 @@ void oneLevelPGMAdd(one_level_pgm *pgm, key_t key, val_t val) {
             || (y_val - lower_prediction) < -pgm->maxError
         ) {
             // TODO: new record
+            
         }
         else { /* Line 13 from Algorithm 1: Swing Filter  */
             // Line 15 from Algorithm 1: Swing Filter
             /* TODO */
 
             // Line 17 from Algorithm 1: Swing Filter
-
+            /* TODO */
+            
+            /* Add key-value pair */
+            pgm->kv_pairs[pgm->count].x = key;
+            pgm->kv_pairs[pgm->count].y = val;
+            pgm->count += 1;
         }
 
     }
-    else if(pgm->count == 1) {
+    else if(pgm->count == 1) { // Add first record
         double dy = (double)1;
         double dx = ((double)key) - ((double)pgm->latest_pair.x);
 
         line_segment seg;
         seg.a = dy/dx;
-        seg.b = ((double)pgm->latest_pair.y) - ((double)pgm->latest_pair.x)*(seg.a); // TODO
+        seg.b = ((double)pgm->latest_pair.y) - ((double)pgm->latest_pair.x)*(seg.a);
 
         cvector_push_back(pgm->level, seg);
 
@@ -91,6 +97,27 @@ bool oneLevelPGMSearch(one_level_pgm *pgm, key_t key, val_t* val) {
     
     if(key < pgm->smallest_key) {
         return false;
+    }
+
+    size_t level_size = cvector_size(pgm->level);
+
+    size_t window = level_size;
+    size_t offset = 0;
+    while (window > 1) {
+      size_t half = window >> 1;
+      offset += (pgm->level[offset + half].pos < key) ? half : 0;
+      window -= half;
+    }
+
+    double pred = pgm->level[offset].a * ((double)key) + pgm->level[offset].b;
+    size_t lo = (size_t)(fmax(pred - pgm->maxError, 0.0));
+    size_t hi = (size_t)(fmin(pred + pgm->maxError + 1, level_size - 1));
+
+    for(size_t i = lo; i <= hi; i++){
+        if(pgm->kv_pairs[i].x == key){
+            *val = pgm->kv_pairs[i].y;
+            return true;
+        }
     }
 
     return false;
