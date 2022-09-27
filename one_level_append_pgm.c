@@ -22,7 +22,7 @@ one_level_pgm* oneLevelPGMInit(size_t size, size_t maxError) {
 }
 
 void oneLevelPGMAdd(one_level_pgm *pgm, id_t key, val_t val) {
-    if (pgm->count > 2) {
+    if (pgm->count >= 2) {
 
         double y_val = (double)pgm->count;
 
@@ -32,8 +32,8 @@ void oneLevelPGMAdd(one_level_pgm *pgm, id_t key, val_t val) {
 
         /* Line 7 from Algorithm 1: Swing Filter  */
         if (
-            (y_val - upper_prediction) > pgm->maxError 
-            || (y_val - lower_prediction) < -pgm->maxError
+            (y_val - upper_prediction) > (double)pgm->maxError 
+            || (y_val - lower_prediction) < -(double)pgm->maxError
         ) { // Add record
             pgm->latest_pair.x = pgm->kv_pairs[pgm->count - 1].x;
             pgm->latest_pair.y = pgm->count - 1;
@@ -44,28 +44,29 @@ void oneLevelPGMAdd(one_level_pgm *pgm, id_t key, val_t val) {
             line_segment seg;
             seg.a = dy/dx;
             seg.b = ((double)pgm->latest_pair.y) - ((double)pgm->latest_pair.x)*(seg.a);
+            seg.pos = pgm->latest_pair.x;
 
             cvector_push_back(pgm->level, seg);
 
             /* Calculate coefficient of upper segment */
-            pgm->upper_a = ((double)(1 + pgm->maxError))/dx;
+            pgm->upper_a = ((double)(1.0 + (double)pgm->maxError))/dx;
 
             /* Calculate coefficient of lower segment */
-            pgm->lower_a = ((double)(1 - pgm->maxError))/dx;
+            pgm->lower_a = ((double)(1.0 - (double)pgm->maxError))/dx;
         }
         else { /* Line 13 from Algorithm 1: Swing Filter  */
             // Line 15 from Algorithm 1: Swing Filter
-            if ((y_val - lower_prediction) > pgm->maxError) {
+            if ((y_val - lower_prediction) > (double)pgm->maxError) {
                 double dy = (double)(pgm->count - pgm->latest_pair.y);
                 double dx = ((double)key) - ((double)pgm->latest_pair.x);
-                pgm->lower_a = ((double)(dy - pgm->maxError))/dx;
+                pgm->lower_a = ((double)(dy - (double)pgm->maxError))/dx;
             }
 
             // Line 17 from Algorithm 1: Swing Filter
-            if ((y_val - upper_prediction) < -pgm->maxError) {
+            if ((y_val - upper_prediction) < -(double)pgm->maxError) {
                 double dy = (double)(pgm->count - pgm->latest_pair.y);
-                double dx = ((double)key) + ((double)pgm->latest_pair.x);
-                pgm->upper_a = ((double)(dy + pgm->maxError))/dx;
+                double dx = ((double)key) - ((double)pgm->latest_pair.x);
+                pgm->upper_a = ((double)(dy + (double)pgm->maxError))/dx;
             }
 
             // This diverges from Swinger algorithm
@@ -77,20 +78,21 @@ void oneLevelPGMAdd(one_level_pgm *pgm, id_t key, val_t val) {
 
     }
     else if(pgm->count == 1) { // Add first record
-        double dy = (double)1;
+        double dy = (double)1.0;
         double dx = ((double)key) - ((double)pgm->latest_pair.x);
 
         line_segment seg;
         seg.a = dy/dx;
         seg.b = ((double)pgm->latest_pair.y) - ((double)pgm->latest_pair.x)*(seg.a);
+        seg.pos = pgm->latest_pair.x;
 
         cvector_push_back(pgm->level, seg);
 
         /* Calculate coefficient of upper segment */
-        pgm->upper_a = ((double)(1 + pgm->maxError))/dx;
+        pgm->upper_a = ((double)(1.0 + (double)pgm->maxError))/dx;
 
         /* Calculate coefficient of lower segment */
-        pgm->lower_a = ((double)(1 - pgm->maxError))/dx;
+        pgm->lower_a = ((double)(1.0 - (double)pgm->maxError))/dx;
     }
     else {
         /* Level Setup */
@@ -117,9 +119,7 @@ bool oneLevelPGMSearch(one_level_pgm *pgm, id_t key, val_t* val) {
         return false;
     }
 
-    size_t level_size = cvector_size(pgm->level);
-
-    size_t window = level_size;
+    size_t window = cvector_size(pgm->level);
     size_t offset = 0;
     while (window > 1) {
       size_t half = window >> 1;
@@ -131,11 +131,11 @@ bool oneLevelPGMSearch(one_level_pgm *pgm, id_t key, val_t* val) {
     double lo_pred = pred - pgm->maxError;
     lo_pred = (lo_pred < 0) ? (0) : (lo_pred);
 
-    double hi_pred = pred + pgm->maxError + 1;
+    double hi_pred = pred + (double)pgm->maxError + 1;
 
     size_t lo = (size_t)lo_pred;
     size_t hi = (size_t)hi_pred;
-    hi = (hi <= (level_size - 1)) ? (hi) : (level_size - 1);
+    hi = (hi <= (pgm->count - 1)) ? (hi) : (pgm->count - 1);
 
     for(size_t i = lo; i <= hi; i++){
         if(pgm->kv_pairs[i].x == key){
