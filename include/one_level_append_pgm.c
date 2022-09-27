@@ -126,8 +126,14 @@ bool oneLevelPGMSearch(one_level_pgm *pgm, key_t key, val_t* val) {
     }
 
     double pred = pgm->level[offset].a * ((double)key) + pgm->level[offset].b;
-    size_t lo = (size_t)(fmax(pred - pgm->maxError, 0.0));
-    size_t hi = (size_t)(fmin(pred + pgm->maxError + 1, level_size - 1));
+    double lo_pred = pred - pgm->maxError;
+    lo_pred = (lo_pred < 0) ? (0) : (lo_pred);
+
+    double hi_pred = pred + pgm->maxError + 1;
+
+    size_t lo = (size_t)lo_pred;
+    size_t hi = (size_t)hi_pred;
+    hi = (hi <= (level_size - 1)) ? (hi) : (level_size - 1);
 
     for(size_t i = lo; i <= hi; i++){
         if(pgm->kv_pairs[i].x == key){
