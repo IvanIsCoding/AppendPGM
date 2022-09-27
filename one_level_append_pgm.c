@@ -1,9 +1,9 @@
 #include "one_level_append_pgm.h"
 #include <math.h>
 
-void oneLevelPGMInit(one_level_pgm *pgm, size_t size, size_t maxError) {
+one_level_pgm* oneLevelPGMInit(size_t size, size_t maxError) {
     /* Basic details */
-    pgm = malloc(sizeof (one_level_pgm));
+    one_level_pgm* pgm = malloc(sizeof (one_level_pgm));
     pgm->kv_pairs = malloc(sizeof(key_value_pair) * size);
     pgm->size = size;
     pgm->maxError = maxError;
@@ -16,10 +16,12 @@ void oneLevelPGMInit(one_level_pgm *pgm, size_t size, size_t maxError) {
     }
 
     size_t level_size = (size / div_factor) + 1;
-    cvector_reserve(pgm->level, level_size); 
+    cvector_reserve(pgm->level, level_size);
+
+    return pgm;
 }
 
-void oneLevelPGMAdd(one_level_pgm *pgm, key_t key, val_t val) {
+void oneLevelPGMAdd(one_level_pgm *pgm, id_t key, val_t val) {
     if (pgm->count > 2) {
 
         double y_val = (double)pgm->count;
@@ -104,13 +106,13 @@ void oneLevelPGMAdd(one_level_pgm *pgm, key_t key, val_t val) {
     pgm->count += 1;
 }
 
-void oneLevelPGMBuild(one_level_pgm *pgm, key_t* keys, val_t* values, size_t size, size_t maxError) {
+void oneLevelPGMBuild(one_level_pgm *pgm, id_t* keys, val_t* values, size_t size, size_t maxError) {
     for (size_t i = 0; i < size; i++) {
         oneLevelPGMAdd(pgm, keys[i], values[i]);
     }
 }
 
-bool oneLevelPGMSearch(one_level_pgm *pgm, key_t key, val_t* val) {
+bool oneLevelPGMSearch(one_level_pgm *pgm, id_t key, val_t* val) {
     if(key < pgm->smallest_key) {
         return false;
     }
