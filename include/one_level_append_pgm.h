@@ -58,6 +58,8 @@ void oneLevelPGMAdd(one_level_pgm *pgm, key_t key, val_t val);
 
 bool oneLevelPGMSearch(one_level_pgm *pgm, key_t key, val_t* val);
 
+void oneLevelPGMFree(one_level_pgm *pgm);
+
 #if defined(__cplusplus)
 }
 #endif

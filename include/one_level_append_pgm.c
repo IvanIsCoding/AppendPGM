@@ -27,21 +27,39 @@ void oneLevelPGMAdd(one_level_pgm *pgm, key_t key, val_t val) {
 
         double upper_prediction = (pgm->upper_a)*((double)key - (double)(pgm->latest_pair.x)) + (double)(pgm->latest_pair.y);
 
-        double lower_prediction = (pgm->lower_a)*((double)key - (double)(pgm->latest_pair.x)) + (double)(pgm->latest_pair.y);;
+        double lower_prediction = (pgm->lower_a)*((double)key - (double)(pgm->latest_pair.x)) + (double)(pgm->latest_pair.y);
 
+        /* Line 7 from Algorithm 1: Swing Filter  */
         if (
             (y_val - upper_prediction) > pgm->maxError 
             || (y_val - lower_prediction) < -pgm->maxError
         ) {
             // TODO: new record
         }
-        else {
+        else { /* Line 13 from Algorithm 1: Swing Filter  */
+            // Line 15 from Algorithm 1: Swing Filter
+            /* TODO */
+
+            // Line 17 from Algorithm 1: Swing Filter
 
         }
 
     }
     else if(pgm->count == 1) {
-        
+        double dy = (double)1;
+        double dx = ((double)key) - ((double)pgm->latest_pair.x);
+
+        line_segment seg;
+        seg.a = dy/dx;
+        seg.b = ((double)pgm->latest_pair.y) - ((double)pgm->latest_pair.x)*(seg.a); // TODO
+
+        cvector_push_back(pgm->level, seg);
+
+        /* Calculate coefficient of upper segment */
+        pgm->upper_a = ((double)(1 + pgm->maxError))/dx;
+
+        /* Calculate coefficient of lower segment */
+        pgm->upper_a = ((double)(1 - pgm->maxError))/dx;
 
         /* Add key-value pair */
         pgm->kv_pairs[pgm->count].x = key;
@@ -53,9 +71,11 @@ void oneLevelPGMAdd(one_level_pgm *pgm, key_t key, val_t val) {
         pgm->smallest_key = key;
         pgm->kv_pairs[pgm->count].x = key;
         pgm->kv_pairs[pgm->count].y = val;
-        pgm->count += 1;
         pgm->latest_pair.x = key;
-        pgm->latest_pair.y = val;
+        pgm->latest_pair.y = pgm->count;
+
+        /* Increment for next item */
+        pgm->count += 1;
     }
 }
 
@@ -75,4 +95,10 @@ bool oneLevelPGMSearch(one_level_pgm *pgm, key_t key, val_t* val) {
 
     return false;
 
+}
+
+void oneLevelPGMFree(one_level_pgm *pgm) {
+    free(pgm->kv_pairs);
+    cvector_free(pgm->level);
+    free(pgm);
 }
