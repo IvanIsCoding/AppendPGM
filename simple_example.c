@@ -5,7 +5,7 @@
 int main() {
     // Generate some random data
     size_t n = 100000;
-    size_t epsilon = 3;
+    size_t epsilon = 1;
     one_level_pgm* pgm = oneLevelPGMInit(n, epsilon);
 
     size_t V = 10000;
@@ -18,6 +18,10 @@ int main() {
     for(uint32_t i = 1; i <= V; i++){
         if(oneLevelPGMSearch(pgm, i*i, &val)){
             count += 1;
+            if(val != i){
+                printf("Error at the value for %d\n", i);
+                break;
+            }
         } else {
             printf("Error at %d\n", i);
             break;
