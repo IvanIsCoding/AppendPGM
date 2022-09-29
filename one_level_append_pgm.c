@@ -28,7 +28,7 @@ one_level_pgm* oneLevelPGMInit(size_t size, size_t maxError) {
     return pgm;
 }
 
-void oneLevelPGMAdd(one_level_pgm *pgm, id_t key, val_t val) {
+void oneLevelPGMAdd(one_level_pgm *pgm, pgm_key_t key, pgm_val_t val) {
     if (pgm->count >= 2) {
 
         double y_val = (double)pgm->count;
@@ -115,13 +115,13 @@ void oneLevelPGMAdd(one_level_pgm *pgm, id_t key, val_t val) {
     pgm->count += 1;
 }
 
-void oneLevelPGMBuild(one_level_pgm *pgm, id_t* keys, val_t* values, size_t size, size_t maxError) {
+void oneLevelPGMBuild(one_level_pgm *pgm, pgm_key_t* keys, pgm_val_t* values, size_t size, size_t maxError) {
     for (size_t i = 0; i < size; i++) {
         oneLevelPGMAdd(pgm, keys[i], values[i]);
     }
 }
 
-bool oneLevelPGMSearch(one_level_pgm *pgm, id_t key, val_t* val) {
+bool oneLevelPGMSearch(one_level_pgm *pgm, pgm_key_t key, pgm_val_t* val) {
     if(key < pgm->smallest_key) {
         return false;
     }
