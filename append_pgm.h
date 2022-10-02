@@ -20,30 +20,24 @@ extern "C" {
 #include "one_level_append_pgm.h"
 
 typedef struct {
-	int test_var;
-} pgm_level;
-
-typedef struct {
 	/* Underlying data */
-	uint32_t maxError;						   /* Maximum error              */	
-	size_t count;							  /* Number of points in spline */
+	uint32_t maxError;						    /* Maximum error              */
+	size_t num_levels;						   /* Number of levels in PGM    */
+	size_t count;							  /* Number of points in PGM    */
 	size_t size;							 /* Maximum number of points   */
 
 	/* Implementation details */
-	cvector_vector_type(pgm_level) levels; /* One and only level of PGM */
-
-	one_level_pgm* first_level;
-
+	cvector_vector_type(one_level_pgm*) levels; /* One and only level of PGM */
 } append_pgm;
 
 
 append_pgm* appendPGMInit(size_t size, size_t maxError);
 
-void appendPGMBuild(append_pgm *pgm, pgm_key_t* keys, pgm_val_t* values, size_t size, size_t maxError);
+void appendPGMBuild(append_pgm *pgm, pgm_key_t* keys, size_t size, size_t maxError);
 
-void appendPGMAdd(append_pgm *pgm, pgm_key_t key, pgm_val_t val);
+void appendPGMAdd(append_pgm *pgm, pgm_key_t key);
 
-bool appendPGMSearch(append_pgm *pgm, pgm_key_t key, pgm_val_t* val);
+pgm_approx_pos appendPGMApproxSearch(append_pgm *pgm, pgm_key_t key);
 
 void appendPGMFree(append_pgm *pgm);
 

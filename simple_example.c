@@ -17,19 +17,19 @@ int main() {
 
     size_t V = 10000;
     for(uint32_t i = 1; i <= V; i++){
-        oneLevelPGMAdd(pgm, i*i, i);
+        oneLevelPGMAdd(pgm, i*i);
     }
 
     uint32_t val = 0;
     uint32_t count = 0;
     for(uint32_t i = 1; i <= V; i++){
-        if(oneLevelPGMSearch(pgm, i*i, &val)){
+        pgm_approx_pos approx_pos = oneLevelPGMApproxSearch(pgm, i*i);
+
+        if (approx_pos.lo <= i - 1 && i - 1 <= approx_pos.hi) {
             count += 1;
-            if(val != i){
-                printf("Error at the value for %d\n", i);
-                break;
-            }
-        } else {
+        }
+
+        if (approx_pos.lo > approx_pos.hi) {
             printf("Error at %d\n", i);
             break;
         }

@@ -20,13 +20,7 @@ extern "C" {
 
 /* Define type for keys and location ids. */
 typedef uint32_t pgm_key_t;
-typedef uint32_t pgm_val_t;
 //typedef uint32_t size_t;
-
-typedef struct {
-	pgm_key_t x;
-	pgm_val_t y;
-} key_value_pair;
 
 typedef struct {
 	pgm_key_t x;
@@ -41,8 +35,12 @@ typedef struct {
 } line_segment;
 
 typedef struct {
+	size_t lo;
+	size_t hi;
+} pgm_approx_pos;
+
+typedef struct {
 	/* Underlying data */
-	key_value_pair*		kv_pairs;				/* Array of entries           */
 	uint32_t maxError;						   /* Maximum error              */	
 	size_t count;							  /* Number of points in spline */
 	size_t size;							 /* Maximum number of points   */
@@ -51,6 +49,7 @@ typedef struct {
 	cvector_vector_type(line_segment) level; /* One and only level of PGM */
 
 	pgm_key_t smallest_key;
+	pgm_key_t largest_key;
 	point_pair latest_pair;
 	double upper_a, lower_a;
 
@@ -59,11 +58,11 @@ typedef struct {
 
 one_level_pgm* oneLevelPGMInit(size_t size, size_t maxError);
 
-void oneLevelPGMBuild(one_level_pgm *pgm, pgm_key_t* keys, pgm_val_t* values, size_t size, size_t maxError);
+void oneLevelPGMBuild(one_level_pgm *pgm, pgm_key_t* keys, size_t size, size_t maxError);
 
-void oneLevelPGMAdd(one_level_pgm *pgm, pgm_key_t key, pgm_val_t val);
+void oneLevelPGMAdd(one_level_pgm *pgm, pgm_key_t key);
 
-bool oneLevelPGMSearch(one_level_pgm *pgm, pgm_key_t key, pgm_val_t* val);
+pgm_approx_pos oneLevelPGMApproxSearch(one_level_pgm *pgm, pgm_key_t key);
 
 void oneLevelPGMFree(one_level_pgm *pgm);
 
