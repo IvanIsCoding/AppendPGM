@@ -7,10 +7,10 @@ https://opensource.org/licenses/MIT.
 */
 #include <stdio.h>
 #include <stdlib.h>
-#include "append_pgm.h"
+#include "append_pgm/append_pgm.h"
 
 int main() {
-    // Generate some random data
+    // Generate data
     size_t n = 100000;
     size_t epsilon = 1;
     append_pgm* pgm = appendPGMInit(n, epsilon);
