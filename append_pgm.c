@@ -80,11 +80,31 @@ pgm_approx_pos appendPGMApproxSearch(append_pgm *pgm, pgm_key_t key) {
         return answer;
     }
 
-    //one_level_pgm* level_pgm = ;
-//
-    //for (size_t current = pgm->num_levels - 1; current > 0; current--) {
-    //    answer = oneLevelPGMApproxSearch();
-    //}
+    one_level_pgm* level_pgm = pgm->levels[pgm->num_levels - 1];
+    size_t model_index = 0;
+
+    for (size_t current = pgm->num_levels - 1; current >= 0; current--) {
+        double pred = level_pgm->level[model_index].a * ((double)key) + level_pgm->level[model_index].b;
+        double lo_pred = pred - level_pgm->maxError;
+        lo_pred = (lo_pred < 0) ? (0) : (lo_pred);
+
+        double hi_pred = pred + (double)level_pgm->maxError + 1;
+
+        answer.lo = (size_t)lo_pred;
+        answer.hi = (size_t)hi_pred;
+        answer.hi = (answer.hi <= (level_pgm->count - 1)) ? (answer.hi) : (level_pgm->count - 1);
+
+        if (current >= 1) {
+            for (size_t i = answer.lo; i <= answer.hi; i++) {
+                if (key >= pgm->levels[current - 1]->level[i].pos) {
+                    model_index = i;
+                    level_pgm = pgm->levels[current - 1];
+                    break;
+                }
+            }
+        }
+
+    }
 
     return answer;
 }
