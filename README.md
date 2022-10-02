@@ -1,4 +1,4 @@
-# AppendPGM [![License](https://img.shields.io/github/license/IvanIsCoding/AppendPGM.svg?style=popout-square)](https://opensource.org/licenses/MIT)
+# AppendPGM [![License](https://img.shields.io/github/license/IvanIsCoding/AppendPGM.svg)](https://opensource.org/licenses/MIT)
 
 A pure C implementation of the Piecewise Geometric Model index (PGM) with support for append operations.
 
