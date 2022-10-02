@@ -7,6 +7,7 @@ https://opensource.org/licenses/MIT.
 */
 #include "append_pgm.h"
 #include <math.h>
+#include <stdio.h>
 
 append_pgm* appendPGMInit(size_t size, size_t maxError) {
     /* Basic details */
@@ -14,6 +15,7 @@ append_pgm* appendPGMInit(size_t size, size_t maxError) {
     pgm->size = size;
     pgm->maxError = maxError;
     pgm->count = 0;
+    cvector_reserve(pgm->levels, 1);
 
     /* First level */
     pgm->num_levels = 1;
@@ -36,8 +38,11 @@ void appendPGMBuild(append_pgm *pgm, pgm_key_t* keys, size_t size, size_t maxErr
 }
 
 void appendPGMAdd(append_pgm *pgm, pgm_key_t key) {
+
+    pgm->count += 1;
+
     for(size_t current = 0; current < pgm->num_levels; current++){
-        size_t previous_level_size = cvector_size(pgm->levels[current]);
+        size_t previous_level_size = cvector_size(pgm->levels[current]->level);
 
         if (current == 0) {
             oneLevelPGMAdd(pgm->levels[current], key);
@@ -47,7 +52,7 @@ void appendPGMAdd(append_pgm *pgm, pgm_key_t key) {
             oneLevelPGMAdd(pgm->levels[current], last_key);
         }
 
-        size_t new_level_size = cvector_size(pgm->levels[current]);
+        size_t new_level_size = cvector_size(pgm->levels[current]->level);
         if (new_level_size == previous_level_size) { // no new point, leave upper levels intact
             return;
         }
@@ -74,16 +79,24 @@ void appendPGMAdd(append_pgm *pgm, pgm_key_t key) {
 pgm_approx_pos appendPGMApproxSearch(append_pgm *pgm, pgm_key_t key) {
     pgm_approx_pos answer;
 
+    printf("DEBUG OI %d\n", key);
+
     if(key < pgm->levels[0]->smallest_key) {
         answer.lo = 1;
         answer.hi = 0;
         return answer;
     }
 
+    printf("DEBUG TCHAU key: %d, num_levels %d\n", key, pgm->num_levels);
+
     one_level_pgm* level_pgm = pgm->levels[pgm->num_levels - 1];
     size_t model_index = 0;
 
-    for (size_t current = pgm->num_levels - 1; current >= 0; current--) {
+    printf("DEBUG MID %d\n", key);
+
+    for (size_t current = pgm->num_levels - 1; current >= 0;) {
+        printf("DEBUG LOOP  key: %d current: %d\n", key, current);
+
         double pred = level_pgm->level[model_index].a * ((double)key) + level_pgm->level[model_index].b;
         double lo_pred = pred - level_pgm->maxError;
         lo_pred = (lo_pred < 0) ? (0) : (lo_pred);
@@ -102,6 +115,10 @@ pgm_approx_pos appendPGMApproxSearch(append_pgm *pgm, pgm_key_t key) {
                     break;
                 }
             }
+            current -= 1;
+        }
+        else {
+            break;
         }
 
     }

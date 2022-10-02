@@ -7,23 +7,23 @@ https://opensource.org/licenses/MIT.
 */
 #include <stdio.h>
 #include <stdlib.h>
-#include "one_level_append_pgm.h"
+#include "append_pgm.h"
 
 int main() {
     // Generate some random data
     size_t n = 100000;
     size_t epsilon = 1;
-    one_level_pgm* pgm = oneLevelPGMInit(n, epsilon);
+    append_pgm* pgm = appendPGMInit(n, epsilon);
 
-    size_t V = 10000;
+    size_t V = 100;
     for(uint32_t i = 1; i <= V; i++){
-        oneLevelPGMAdd(pgm, i*i);
+        appendPGMAdd(pgm, i*i);
     }
 
     uint32_t val = 0;
     uint32_t count = 0;
     for(uint32_t i = 1; i <= V; i++){
-        pgm_approx_pos approx_pos = oneLevelPGMApproxSearch(pgm, i*i);
+        pgm_approx_pos approx_pos = appendPGMApproxSearch(pgm, i*i);
 
         if (approx_pos.lo <= i - 1 && i - 1 <= approx_pos.hi) {
             count += 1;
@@ -36,7 +36,7 @@ int main() {
     }
 
     printf("Count is equal to %d, expected %d\n", count, V);
-    printf("Number of lines: %d\n", cvector_size(pgm->level));
+    //printf("Number of lines: %d\n", cvector_size(pgm->level));
 
     return 0;
 }
