@@ -11,7 +11,6 @@ https://opensource.org/licenses/MIT.
 one_level_pgm* oneLevelPGMInit(size_t size, size_t maxError) {
     /* Basic details */
     one_level_pgm* pgm = malloc(sizeof (one_level_pgm));
-    pgm->kv_pairs = malloc(sizeof(key_value_pair) * size);
     pgm->size = size;
     pgm->maxError = maxError;
     pgm->count = 0;
@@ -28,7 +27,7 @@ one_level_pgm* oneLevelPGMInit(size_t size, size_t maxError) {
     return pgm;
 }
 
-void oneLevelPGMAdd(one_level_pgm *pgm, id_t key, val_t val) {
+void oneLevelPGMAdd(one_level_pgm *pgm, pgm_key_t key) {
     if (pgm->count >= 2) {
 
         double y_val = (double)pgm->count;
@@ -42,7 +41,7 @@ void oneLevelPGMAdd(one_level_pgm *pgm, id_t key, val_t val) {
             (y_val - upper_prediction) > (double)pgm->maxError 
             || (y_val - lower_prediction) < -(double)pgm->maxError
         ) { // Add record
-            pgm->latest_pair.x = pgm->kv_pairs[pgm->count - 1].x;
+            pgm->latest_pair.x = pgm->largest_key;
             pgm->latest_pair.y = pgm->count - 1;
 
             double dy = (double)1;
@@ -109,21 +108,24 @@ void oneLevelPGMAdd(one_level_pgm *pgm, id_t key, val_t val) {
     }
 
     /* Add key-value pair */
-    pgm->kv_pairs[pgm->count].x = key;
-    pgm->kv_pairs[pgm->count].y = val;
+    pgm->largest_key = key;
     /* Increment for next item */
     pgm->count += 1;
 }
 
-void oneLevelPGMBuild(one_level_pgm *pgm, id_t* keys, val_t* values, size_t size, size_t maxError) {
+void oneLevelPGMBuild(one_level_pgm *pgm, pgm_key_t* keys, size_t size, size_t maxError) {
     for (size_t i = 0; i < size; i++) {
-        oneLevelPGMAdd(pgm, keys[i], values[i]);
+        oneLevelPGMAdd(pgm, keys[i]);
     }
 }
 
-bool oneLevelPGMSearch(one_level_pgm *pgm, id_t key, val_t* val) {
+pgm_approx_pos oneLevelPGMApproxSearch(one_level_pgm *pgm, pgm_key_t key) {
+    pgm_approx_pos answer;
+
     if(key < pgm->smallest_key) {
-        return false;
+        answer.lo = 1;
+        answer.hi = 0;
+        return answer;
     }
 
     size_t window = cvector_size(pgm->level);
@@ -140,22 +142,14 @@ bool oneLevelPGMSearch(one_level_pgm *pgm, id_t key, val_t* val) {
 
     double hi_pred = pred + (double)pgm->maxError + 1;
 
-    size_t lo = (size_t)lo_pred;
-    size_t hi = (size_t)hi_pred;
-    hi = (hi <= (pgm->count - 1)) ? (hi) : (pgm->count - 1);
+    answer.lo = (size_t)lo_pred;
+    answer.hi = (size_t)hi_pred;
+    answer.hi = (answer.hi <= (pgm->count - 1)) ? (answer.hi) : (pgm->count - 1);
 
-    for(size_t i = lo; i <= hi; i++){
-        if(pgm->kv_pairs[i].x == key){
-            *val = pgm->kv_pairs[i].y;
-            return true;
-        }
-    }
-
-    return false;
+    return answer;
 }
 
 void oneLevelPGMFree(one_level_pgm *pgm) {
-    free(pgm->kv_pairs);
     cvector_free(pgm->level);
     free(pgm);
 }
