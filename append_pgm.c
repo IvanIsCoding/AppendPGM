@@ -58,8 +58,7 @@ void appendPGMAdd(append_pgm *pgm, pgm_key_t key) {
         }
     }
 
-    if (pgm->levels[pgm->num_levels - 1]->count > 1) {
-
+    if (cvector_size(pgm->levels[pgm->num_levels - 1]->level) > 1) {
         size_t div_factor = 2*pgm->maxError;
         if(div_factor < 1) {
             div_factor = 1;
@@ -79,40 +78,38 @@ void appendPGMAdd(append_pgm *pgm, pgm_key_t key) {
 pgm_approx_pos appendPGMApproxSearch(append_pgm *pgm, pgm_key_t key) {
     pgm_approx_pos answer;
 
-    printf("DEBUG OI %d\n", key);
-
     if(key < pgm->levels[0]->smallest_key) {
         answer.lo = 1;
         answer.hi = 0;
         return answer;
     }
 
-    printf("DEBUG TCHAU key: %d, num_levels %d\n", key, pgm->num_levels);
-
     one_level_pgm* level_pgm = pgm->levels[pgm->num_levels - 1];
+    size_t maxError = level_pgm->maxError;
     size_t model_index = 0;
 
-    printf("DEBUG MID %d\n", key);
-
     for (size_t current = pgm->num_levels - 1; current >= 0;) {
-        printf("DEBUG LOOP  key: %d current: %d\n", key, current);
-
+        size_t level_size = level_pgm->count;
         double pred = level_pgm->level[model_index].a * ((double)key) + level_pgm->level[model_index].b;
-        double lo_pred = pred - level_pgm->maxError;
+        double lo_pred = pred - maxError;
         lo_pred = (lo_pred < 0) ? (0) : (lo_pred);
 
-        double hi_pred = pred + (double)level_pgm->maxError + 1;
+        double hi_pred = pred + (double)maxError + 1;
 
         answer.lo = (size_t)lo_pred;
         answer.hi = (size_t)hi_pred;
-        answer.hi = (answer.hi <= (level_pgm->count - 1)) ? (answer.hi) : (level_pgm->count - 1);
+        answer.lo = (answer.lo <= (level_size - 1)) ? (answer.lo) : (level_size - 1);
+        answer.hi = (answer.hi <= (level_size - 1)) ? (answer.hi) : (level_size - 1);
 
         if (current >= 1) {
-            for (size_t i = answer.lo; i <= answer.hi; i++) {
-                if (key >= pgm->levels[current - 1]->level[i].pos) {
+            level_pgm = pgm->levels[current - 1];
+            for (size_t i = answer.hi; i >= answer.lo;) {
+                if (key >= level_pgm->level[i].pos) {
                     model_index = i;
-                    level_pgm = pgm->levels[current - 1];
                     break;
+                }
+                if (i > 0) {
+                    i -= 1;
                 }
             }
             current -= 1;

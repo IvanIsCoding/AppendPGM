@@ -15,7 +15,7 @@ int main() {
     size_t epsilon = 1;
     append_pgm* pgm = appendPGMInit(n, epsilon);
 
-    size_t V = 100;
+    size_t V = 31000;
     for(uint32_t i = 1; i <= V; i++){
         appendPGMAdd(pgm, i*i);
     }
@@ -36,7 +36,6 @@ int main() {
     }
 
     printf("Count is equal to %d, expected %d\n", count, V);
-    //printf("Number of lines: %d\n", cvector_size(pgm->level));
 
     return 0;
 }
