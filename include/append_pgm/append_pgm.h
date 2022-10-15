@@ -12,12 +12,11 @@ extern "C" {
 #ifndef APPEND_PGM_H
 #define APPEND_PGM_H
 
-#define CVECTOR_LOGARITHMIC_GROWTH /* for C Vector */
+#define MAX_PGM_LEVELS 25
 
 #include <math.h>
 #include <stdint.h>
 #include <stdbool.h>
-#include "append_pgm/cvector.h"
 #include "append_pgm/one_level_append_pgm.h"
 
 typedef struct {
@@ -28,20 +27,20 @@ typedef struct {
 	size_t size;							 /* Maximum number of points   */
 
 	/* Implementation details */
-	cvector_vector_type(one_level_pgm*) levels; /* One and only level of PGM */
+	one_level_pgm** levels; /* One and only level of PGM */
 } append_pgm;
 
 
 append_pgm* appendPGMInit(size_t size, size_t maxError) {
     /* Basic details */
-    append_pgm* pgm = malloc(sizeof (append_pgm));
+    append_pgm* pgm = (append_pgm*) malloc(sizeof (append_pgm));
     pgm->size = size;
     pgm->maxError = maxError;
     pgm->count = 0;
-    cvector_reserve(pgm->levels, 1);
+    pgm->levels = (one_level_pgm**) malloc(sizeof(one_level_pgm*) * MAX_PGM_LEVELS);
 
     /* First level */
-    pgm->num_levels = 1;
+    pgm->num_levels = 0;
     size_t div_factor = 2*pgm->maxError;
     if(div_factor < 1) {
         div_factor = 1;
@@ -49,7 +48,7 @@ append_pgm* appendPGMInit(size_t size, size_t maxError) {
 
     size_t level_size = (pgm->size / div_factor) + 1;
     one_level_pgm* new_level = oneLevelPGMInit(level_size, pgm->maxError);
-    cvector_push_back(pgm->levels, new_level);
+    pgm->levels[pgm->num_levels++] = new_level;
 
     return pgm;
 }
@@ -59,7 +58,7 @@ void appendPGMAdd(append_pgm *pgm, pgm_key_t key) {
     pgm->count += 1;
 
     for(size_t current = 0; current < pgm->num_levels; current++){
-        size_t previous_level_size = cvector_size(pgm->levels[current]->level);
+        size_t previous_level_size = pgm->levels[current]->level_pos;
 
         if (current == 0) {
             oneLevelPGMAdd(pgm->levels[current], key);
@@ -69,13 +68,13 @@ void appendPGMAdd(append_pgm *pgm, pgm_key_t key) {
             oneLevelPGMAdd(pgm->levels[current], last_key);
         }
 
-        size_t new_level_size = cvector_size(pgm->levels[current]->level);
+        size_t new_level_size = pgm->levels[current]->level_pos;
         if (new_level_size == previous_level_size) { // no new point, leave upper levels intact
             return;
         }
     }
 
-    if (cvector_size(pgm->levels[pgm->num_levels - 1]->level) > 1) {
+    if (pgm->levels[pgm->num_levels - 1]->level_pos > 1) {
         size_t div_factor = 2*pgm->maxError;
         if(div_factor < 1) {
             div_factor = 1;
@@ -83,8 +82,7 @@ void appendPGMAdd(append_pgm *pgm, pgm_key_t key) {
 
         size_t level_size = (pgm->levels[pgm->num_levels - 1]->size / div_factor) + 1;
         one_level_pgm* new_level = oneLevelPGMInit(level_size, pgm->maxError);
-        cvector_push_back(pgm->levels, new_level);
-        pgm->num_levels += 1;
+        pgm->levels[pgm->num_levels++] = new_level;
 
         oneLevelPGMAdd(pgm->levels[pgm->num_levels - 1], pgm->levels[pgm->num_levels - 2]->level[0].pos);
         oneLevelPGMAdd(pgm->levels[pgm->num_levels - 1], pgm->levels[pgm->num_levels - 2]->level[1].pos);
@@ -151,7 +149,7 @@ void appendPGMFree(append_pgm *pgm) {
         oneLevelPGMFree(pgm->levels[i]);
     }
 
-    cvector_free(pgm->levels);
+    free(pgm->levels);
     free(pgm);
 }
 

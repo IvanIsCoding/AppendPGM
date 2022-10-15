@@ -12,12 +12,9 @@ extern "C" {
 #ifndef ONE_LEVEL_APPEND_PGM_H
 #define ONE_LEVEL_APPEND_PGM_H
 
-#define CVECTOR_LOGARITHMIC_GROWTH /* for C Vector */
-
 #include <math.h>
 #include <stdint.h>
 #include <stdbool.h>
-#include "append_pgm/cvector.h"
 
 /* Define type for keys and location ids. */
 typedef uint32_t pgm_key_t;
@@ -47,7 +44,8 @@ typedef struct {
 	size_t size;							 /* Maximum number of points   */
 
 	/* Implementation details */
-	cvector_vector_type(line_segment) level; /* One and only level of PGM */
+	line_segment* level; /* One and only level of PGM */
+    size_t level_pos;
 
 	pgm_key_t smallest_key;
 	pgm_key_t largest_key;
@@ -59,7 +57,7 @@ typedef struct {
 
 one_level_pgm* oneLevelPGMInit(size_t size, size_t maxError) {
     /* Basic details */
-    one_level_pgm* pgm = malloc(sizeof (one_level_pgm));
+    one_level_pgm* pgm = (one_level_pgm*) malloc(sizeof (one_level_pgm));
     pgm->size = size;
     pgm->maxError = maxError;
     pgm->count = 0;
@@ -71,7 +69,8 @@ one_level_pgm* oneLevelPGMInit(size_t size, size_t maxError) {
     }
 
     size_t level_size = (size / div_factor) + 1;
-    cvector_reserve(pgm->level, level_size);
+    pgm->level = (line_segment*) malloc(sizeof (line_segment) * level_size);
+    pgm->level_pos = 0;
 
     return pgm;
 }
@@ -101,7 +100,7 @@ void oneLevelPGMAdd(one_level_pgm *pgm, pgm_key_t key) {
             seg.b = ((double)pgm->latest_pair.y) - ((double)pgm->latest_pair.x)*(seg.a);
             seg.pos = pgm->latest_pair.x;
 
-            cvector_push_back(pgm->level, seg);
+            pgm->level[pgm->level_pos++] = seg;
 
             /* Calculate coefficient of upper segment */
             pgm->upper_a = ((double)(1.0 + (double)pgm->maxError))/dx;
@@ -126,7 +125,7 @@ void oneLevelPGMAdd(one_level_pgm *pgm, pgm_key_t key) {
 
             // This diverges from Swinger algorithm
             // as we don't calculate the A with Mean-Square error, just the average
-            size_t level_last = cvector_size(pgm->level) - 1;
+            size_t level_last = pgm->level_pos - 1;
             pgm->level[level_last].a = (pgm->upper_a + pgm->lower_a)/2.0;
             pgm->level[level_last].b = ((double)pgm->latest_pair.y) - ((double)pgm->latest_pair.x)*((pgm->upper_a + pgm->lower_a)/2.0);
         }
@@ -141,7 +140,7 @@ void oneLevelPGMAdd(one_level_pgm *pgm, pgm_key_t key) {
         seg.b = ((double)pgm->latest_pair.y) - ((double)pgm->latest_pair.x)*(seg.a);
         seg.pos = pgm->latest_pair.x;
 
-        cvector_push_back(pgm->level, seg);
+        pgm->level[pgm->level_pos++] = seg;
 
         /* Calculate coefficient of upper segment */
         pgm->upper_a = ((double)(1.0 + (double)pgm->maxError))/dx;
@@ -177,7 +176,7 @@ pgm_approx_pos oneLevelPGMApproxSearch(one_level_pgm *pgm, pgm_key_t key) {
         return answer;
     }
 
-    size_t window = cvector_size(pgm->level);
+    size_t window = pgm->level_pos;
     size_t offset = 0;
     while (window > 1) {
       size_t half = window >> 1;
@@ -199,7 +198,7 @@ pgm_approx_pos oneLevelPGMApproxSearch(one_level_pgm *pgm, pgm_key_t key) {
 }
 
 void oneLevelPGMFree(one_level_pgm *pgm) {
-    cvector_free(pgm->level);
+    free(pgm->level);
     free(pgm);
 }
 
