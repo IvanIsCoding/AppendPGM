@@ -25,16 +25,18 @@ typedef struct {
 	size_t num_levels;						   /* Number of levels in PGM    */
 	size_t count;							  /* Number of points in PGM    */
 	size_t size;							 /* Maximum number of points   */
+    size_t size_second;							 /* Maximum number of points in second level */
 
 	/* Implementation details */
 	one_level_pgm** levels; /* One and only level of PGM */
 } append_pgm;
 
 
-append_pgm* appendPGMInit(size_t size, size_t maxError) {
+append_pgm* appendPGMInit(size_t size, size_t size_second, size_t maxError) {
     /* Basic details */
     append_pgm* pgm = (append_pgm*) malloc(sizeof (append_pgm));
     pgm->size = size;
+    pgm->size_second = size_second;
     pgm->maxError = maxError;
     pgm->count = 0;
     pgm->levels = (one_level_pgm**) malloc(sizeof(one_level_pgm*) * MAX_PGM_LEVELS);
@@ -81,6 +83,9 @@ void appendPGMAdd(append_pgm *pgm, pgm_key_t key) {
         }
 
         size_t level_size = (pgm->levels[pgm->num_levels - 1]->size / div_factor) + 1;
+        if (pgm->num_levels - 1 == 0) {
+            level_size = pgm->size_second;
+        }
         one_level_pgm* new_level = oneLevelPGMInit(level_size, pgm->maxError);
         pgm->levels[pgm->num_levels++] = new_level;
 

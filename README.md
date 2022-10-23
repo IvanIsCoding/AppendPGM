@@ -22,9 +22,10 @@ The above command compiles the `examples/simple.c` and executes it:
 
 int main() {
     // Generate data
-    size_t n = 100000;
+    size_t n_bottom = 100000;
+    size_t n_second = 100; 
     size_t epsilon = 1;
-    append_pgm* pgm = appendPGMInit(n, epsilon);
+    append_pgm* pgm = appendPGMInit(n_bottom, n_second, epsilon);
 
     size_t V = 31000;
     for(uint32_t i = 1; i <= V; i++){
