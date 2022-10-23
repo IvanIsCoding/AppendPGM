@@ -153,6 +153,15 @@ void appendPGMFree(append_pgm *pgm) {
     free(pgm);
 }
 
+size_t appendPGMSizeBytes(append_pgm *pgm) {
+    size_t level_sizes = 0;
+    for(size_t i = 0; i < pgm->num_levels; i++){
+        level_sizes += oneLevelPGMSizeBytes(pgm->levels[i]);
+    }
+    size_t aux_size = sizeof(append_pgm);
+    return level_sizes + aux_size;
+}
+
 #if defined(__cplusplus)
 }
 #endif
