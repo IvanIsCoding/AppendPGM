@@ -203,6 +203,12 @@ void oneLevelPGMFree(one_level_pgm *pgm) {
     free(pgm);
 }
 
+size_t oneLevelPGMSizeBytes(one_level_pgm *pgm) {
+    size_t spline_size =  cvector_size(pgm->level) * sizeof(line_segment);
+    size_t aux_size = sizeof(one_level_pgm);
+    return spline_size + aux_size;
+}
+
 #if defined(__cplusplus)
 }
 #endif

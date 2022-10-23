@@ -36,6 +36,7 @@ int main() {
     }
 
     printf("Count is equal to %d, expected %d\n", count, V);
+    printf("Size of PGM in bytes: %d\n", appendPGMSizeBytes(pgm));
 
     return 0;
 }
